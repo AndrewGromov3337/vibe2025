@@ -61,6 +61,29 @@ async function getHtmlRows() {
 
 // Modified request handler with template replacement
 async function handleRequest(req, res) {
+
+// Парочка логин:пароль — для задания достаточно жёстко закодировать их здесь:
+const AUTH_USER = 'admin';
+const AUTH_PASS = 'secret';
+
+// В вашей handleRequest(req, res):
+const authHeader = req.headers.authorization;
+if (!authHeader) {
+  res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="Secure Area"' });
+  return res.end('Authentication required');
+}
+const [scheme, encoded] = authHeader.split(' ');
+if (scheme !== 'Basic') {
+  res.writeHead(400);
+  return res.end('Bad authentication scheme');
+}
+const [user, pass] = Buffer.from(encoded, 'base64').toString().split(':');
+if (user !== AUTH_USER || pass !== AUTH_PASS) {
+  res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="Secure Area"' });
+  return res.end('Invalid credentials');
+}
+
+
     // 1) Обрабатываем GET-запрос к корню
     if (req.method === 'GET' && req.url === '/') {
         try {
