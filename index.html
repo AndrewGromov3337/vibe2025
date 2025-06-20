@@ -1,104 +1,108 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>To-Do List</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
-        #todoList {
-            border-collapse: collapse;
-            width: 70%;
-            margin: 0 auto;
-        }
-        #todoList th, #todoList td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        #todoList th {
-            background-color: #f0f0f0;
-        }
-        #todoList th:first-child, #todoList th:last-child {
-            width: 5%;
-        }
-        #todoList th:nth-child(2) {
-            width: 90%;
-        }
-        .add-form {
-            margin-top: 20px;
-            width: 70%;
-            margin: 20px auto;
-        }
-        .add-form input[type="text"] {
-            padding: 8px;
-            width: 70%;
-        }
-        .add-form button {
-            padding: 8px;
-            width: 20%;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>To-Do List</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .top-bar { width: 70%; margin: 20px auto 0; text-align: right; }
+    #todoList { border-collapse: collapse; width: 70%; margin: 10px auto; }
+    #todoList th, #todoList td { border: 1px solid #ddd; padding: 8px; }
+    #todoList th { background-color: #f0f0f0; }
+    #todoList th:first-child, #todoList th:last-child { width: 5%; }
+    #todoList th:nth-child(2) { width: 85%; }
+    #todoList th:nth-child(3) { width: 10%; }
+    .controls { width: 70%; margin: 20px auto; text-align: center; }
+    .controls input[type="text"] { padding: 8px; width: 70%; }
+    .controls button { padding: 8px 12px; }
+  </style>
 </head>
 <body>
+  <div class="top-bar">
+    <form action="/logout" method="GET">
+      <button type="submit">Выйти</button>
+    </form>
+  </div>
 
-<h2 style="text-align: center;">To-Do List</h2>
+  <h2 style="text-align:center;">To-Do List</h2>
 
-<table id="todoList">
+  <table id="todoList">
     <thead>
-        <tr>
-            <th>Number</th>
-            <th>Text</th>
-            <th>Action</th>
-        </tr>
+      <tr>
+        <th>#</th>
+        <th>Task</th>
+        <th>Action</th>
+      </tr>
     </thead>
     <tbody id="listBody">
-        {{rows}}
+      {{rows}}
     </tbody>
-</table>
+  </table>
 
-<div class="add-form">
-    <input type="text" id="newItem" placeholder="Enter new item">
+  <div class="controls">
+    <input type="text" id="newItem" placeholder="Enter new item" />
     <button onclick="addItem()">Add</button>
-</div>
+  </div>
 
-<script>
-    let items = [];
-    let nextId = 1;
-
-    function renderList() {
-        const listBody = document.getElementById('listBody');
-        listBody.innerHTML = '';
-
-        items.forEach((item, index) => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${item.text}</td>
-                <td><button onclick="removeItem(${index})">Remove</button></td>
-            `;
-            listBody.appendChild(row);
+  <script>
+    async function addItem() {
+      const newItem = document.getElementById('newItem');
+      const text = newItem.value.trim();
+      if (!text) return;
+      try {
+        const res = await fetch('/add-item', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `text=${encodeURIComponent(text)}`
         });
-    }
-
-    function addItem() {
-        const newItemInput = document.getElementById('newItem');
-        const newItemText = newItemInput.value.trim();
-
-        if (newItemText) {
-            items.push({ id: nextId++, text: newItemText });
-            newItemInput.value = '';
-            renderList();
+        const result = await res.json();
+        if (result.status === 'ok') {
+          newItem.value = '';
+          location.reload();
+        } else {
+          alert('Error: ' + result.message);
         }
+      } catch (e) {
+        console.error(e);
+        alert('Network error');
+      }
     }
 
-    function removeItem(index) {
-        items.splice(index, 1);
-        renderList();
+    async function deleteItem(id) {
+      try {
+        const res = await fetch('/delete-item', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `id=${encodeURIComponent(id)}`
+        });
+        const result = await res.json();
+        if (result.status === 'ok') location.reload();
+        else alert('Error: ' + result.message);
+      } catch (e) {
+        console.error(e);
+        alert('Network error');
+      }
     }
-</script>
 
+    async function editItem(id, oldText) {
+      const newText = prompt('Edit task:', oldText);
+      if (newText === null || !newText.trim()) return;
+      try {
+        const res = await fetch('/update-item', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `id=${encodeURIComponent(id)}&text=${encodeURIComponent(newText)}`
+        });
+        const result = await res.json();
+        if (result.status === 'ok') location.reload();
+        else alert('Error: ' + result.message);
+      } catch (e) {
+        console.error(e);
+        alert('Network error');
+      }
+    }
+  </script>
 </body>
 </html>
+
