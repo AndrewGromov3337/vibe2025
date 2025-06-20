@@ -38,23 +38,19 @@ const dbConfig = {
 
 // Stub function for generating HTML rows
 async function getHtmlRows() {
-    // Example data - replace with actual DB data later
-    /*
-    const todoItems = [
-        { id: 1, text: 'First todo item' },
-        { id: 2, text: 'Second todo item' }
-    ];*/
-
-    const todoItems = await retrieveListItems();
-
-    // Generate HTML for each item
-    return todoItems.map(item => `
-        <tr>
-            <td>${item.id}</td>
-            <td>${item.text}</td>
-            <td><button class="delete-btn">×</button></td>
-        </tr>
-    `).join('');
+  const todoItems = await retrieveListItems();
+  return todoItems.map(item => `
+    <tr>
+      <td>${item.id}</td>
+      <td>${item.text}</td>
+      <td>
+        <form method="POST" action="/items/delete" style="display:inline;">
+          <input type="hidden" name="id" value="${item.id}">
+          <button type="submit">×</button>
+        </form>
+      </td>
+    </tr>
+  `).join('');
 }
 
 // Modified request handler with template replacement
@@ -97,6 +93,28 @@ async function handleRequest(req, res) {
         });
         return;  // обязательно, чтобы не упасть дальше в общий else
     }
+
+// DELETE: обработка POST /items/delete
+else if (req.method === 'POST' && req.url === '/items/delete') {
+  let body = '';
+  req.on('data', chunk => { body += chunk.toString(); });
+  req.on('end', async () => {
+    const { id } = Object.fromEntries(new URLSearchParams(body));
+    try {
+      const conn = await mysql.createConnection(dbConfig);
+      await conn.execute('DELETE FROM items WHERE id = ?', [id]);
+      await conn.end();
+      // после удаления — редирект обратно
+      res.writeHead(302, { Location: '/' });
+      return res.end();
+    } catch (err) {
+      console.error('Error deleting item:', err);
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      return res.end('Error deleting item');
+    }
+  });
+  return;
+}
 
     // 3) Всё остальное — 404
     else {
