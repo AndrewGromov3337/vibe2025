@@ -1,30 +1,30 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>To-Do List</title>
+    <title>to-do list</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: arial, sans-serif;
         }
-        #todoList {
+        #todolist {
             border-collapse: collapse;
             width: 70%;
             margin: 0 auto;
         }
-        #todoList th, #todoList td {
+        #todolist th, #todolist td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
         }
-        #todoList th {
+        #todolist th {
             background-color: #f0f0f0;
         }
-        #todoList th:first-child, #todoList th:last-child {
+        #todolist th:first-child, #todolist th:last-child {
             width: 5%;
         }
-        #todoList th:nth-child(2) {
+        #todolist th:nth-child(2) {
             width: 90%;
         }
         .add-form {
@@ -44,61 +44,26 @@
 </head>
 <body>
 
-<h2 style="text-align: center;">To-Do List</h2>
+<h2 style="text-align: center;">to-do list</h2>
 
-<table id="todoList">
+<table id="todolist">
     <thead>
         <tr>
-            <th>Number</th>
-            <th>Text</th>
-            <th>Action</th>
+            <th>number</th>
+            <th>text</th>
+            <th>action</th>
         </tr>
     </thead>
-    <tbody id="listBody">
+    <tbody id="listbody">
         {{rows}}
     </tbody>
 </table>
 
-<div class="add-form">
-    <input type="text" id="newItem" placeholder="Enter new item">
-    <button onclick="addItem()">Add</button>
-</div>
+<form id="add-form" class="add-form" method="post" action="/items">
+  <input type="text" name="text" placeholder="новый элемент" required>
+  <button type="submit">добавить</button>
+</form>
 
-<script>
-    let items = [];
-    let nextId = 1;
-
-    function renderList() {
-        const listBody = document.getElementById('listBody');
-        listBody.innerHTML = '';
-
-        items.forEach((item, index) => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${index + 1}</td>
-                <td>${item.text}</td>
-                <td><button onclick="removeItem(${index})">Remove</button></td>
-            `;
-            listBody.appendChild(row);
-        });
-    }
-
-    function addItem() {
-        const newItemInput = document.getElementById('newItem');
-        const newItemText = newItemInput.value.trim();
-
-        if (newItemText) {
-            items.push({ id: nextId++, text: newItemText });
-            newItemInput.value = '';
-            renderList();
-        }
-    }
-
-    function removeItem(index) {
-        items.splice(index, 1);
-        renderList();
-    }
-</script>
 
 </body>
 </html>
