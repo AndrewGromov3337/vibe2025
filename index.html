@@ -1,69 +1,108 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="ru">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>to-do list</title>
-    <style>
-        body {
-            font-family: arial, sans-serif;
-        }
-        #todolist {
-            border-collapse: collapse;
-            width: 70%;
-            margin: 0 auto;
-        }
-        #todolist th, #todolist td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        #todolist th {
-            background-color: #f0f0f0;
-        }
-        #todolist th:first-child, #todolist th:last-child {
-            width: 5%;
-        }
-        #todolist th:nth-child(2) {
-            width: 90%;
-        }
-        .add-form {
-            margin-top: 20px;
-            width: 70%;
-            margin: 20px auto;
-        }
-        .add-form input[type="text"] {
-            padding: 8px;
-            width: 70%;
-        }
-        .add-form button {
-            padding: 8px;
-            width: 20%;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>To-Do List</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .top-bar { width: 70%; margin: 20px auto 0; text-align: right; }
+    #todoList { border-collapse: collapse; width: 70%; margin: 10px auto; }
+    #todoList th, #todoList td { border: 1px solid #ddd; padding: 8px; }
+    #todoList th { background-color: #f0f0f0; }
+    #todoList th:first-child, #todoList th:last-child { width: 5%; }
+    #todoList th:nth-child(2) { width: 85%; }
+    #todoList th:nth-child(3) { width: 10%; }
+    .controls { width: 70%; margin: 20px auto; text-align: center; }
+    .controls input[type="text"] { padding: 8px; width: 70%; }
+    .controls button { padding: 8px 12px; }
+  </style>
 </head>
 <body>
+  <div class="top-bar">
+    <form action="/logout" method="GET">
+      <button type="submit">Выйти</button>
+    </form>
+  </div>
 
-<h2 style="text-align: center;">to-do list</h2>
+  <h2 style="text-align:center;">To-Do List</h2>
 
-<table id="todolist">
+  <table id="todoList">
     <thead>
-        <tr>
-            <th>number</th>
-            <th>text</th>
-            <th>action</th>
-        </tr>
+      <tr>
+        <th>#</th>
+        <th>Task</th>
+        <th>Action</th>
+      </tr>
     </thead>
-    <tbody id="listbody">
-        {{rows}}
+    <tbody id="listBody">
+      {{rows}}
     </tbody>
-</table>
+  </table>
 
-<form id="add-form" class="add-form" method="post" action="/items">
-  <input type="text" name="text" placeholder="новый элемент" required>
-  <button type="submit">добавить</button>
-</form>
+  <div class="controls">
+    <input type="text" id="newItem" placeholder="Enter new item" />
+    <button onclick="addItem()">Add</button>
+  </div>
 
+  <script>
+    async function addItem() {
+      const newItem = document.getElementById('newItem');
+      const text = newItem.value.trim();
+      if (!text) return;
+      try {
+        const res = await fetch('/add-item', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `text=${encodeURIComponent(text)}`
+        });
+        const result = await res.json();
+        if (result.status === 'ok') {
+          newItem.value = '';
+          location.reload();
+        } else {
+          alert('Error: ' + result.message);
+        }
+      } catch (e) {
+        console.error(e);
+        alert('Network error');
+      }
+    }
 
+    async function deleteItem(id) {
+      try {
+        const res = await fetch('/delete-item', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `id=${encodeURIComponent(id)}`
+        });
+        const result = await res.json();
+        if (result.status === 'ok') location.reload();
+        else alert('Error: ' + result.message);
+      } catch (e) {
+        console.error(e);
+        alert('Network error');
+      }
+    }
+
+    async function editItem(id, oldText) {
+      const newText = prompt('Edit task:', oldText);
+      if (newText === null || !newText.trim()) return;
+      try {
+        const res = await fetch('/update-item', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: `id=${encodeURIComponent(id)}&text=${encodeURIComponent(newText)}`
+        });
+        const result = await res.json();
+        if (result.status === 'ok') location.reload();
+        else alert('Error: ' + result.message);
+      } catch (e) {
+        console.error(e);
+        alert('Network error');
+      }
+    }
+  </script>
 </body>
 </html>
+
